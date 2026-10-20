@@ -1,0 +1,70 @@
+# Python virtual environments
+ml/venv/
+ml/venv313/
+.venv/
+venv/
+
+# Python cache & temporary files
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.ipynb_checkpoints/
+
+# Environment / Secret keys (JANGAN PERNAH DI-COMMIT)
+.env
+.env.*
+!.env.example
+laravel/.env
+laravel/.env.*
+!laravel/.env.example
+ml/.env
+ml/.env.*
+!ml/.env.example
+
+# Laravel vendor & build files
+laravel/vendor/
+laravel/node_modules/
+laravel/public/build/
+laravel/public/hot/
+laravel/public/storage/
+laravel/storage/*.key
+laravel/storage/pail/
+laravel/storage/framework/cache/*
+laravel/storage/framework/sessions/*
+laravel/storage/framework/views/*
+laravel/storage/logs/*
+!laravel/storage/framework/cache/.gitignore
+!laravel/storage/framework/sessions/.gitignore
+!laravel/storage/framework/views/.gitignore
+!laravel/storage/logs/.gitignore
+laravel/.phpunit.result.cache
+
+# Database lokal (SQLite/dump)
+laravel/database/*.sqlite
+laravel/database/*.sqlite-journal
+*.sql
+
+# Model backup / file corrupt testing di ml/models
+ml/models/**/model_corrupt_backup.pkl
+ml/models/**/metadata_backup.json
+
+# Dataset besar (jika diunduh secara lokal)
+ml/dataset/*
+!ml/dataset/.gitkeep
+!ml/dataset/README.md
+
+# Storage model uploads dinamis
+laravel/storage/app/models/*
+!laravel/storage/app/models/.gitkeep
+
+# IDE / OS junk
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store
+Thumbs.db

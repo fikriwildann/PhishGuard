@@ -1,0 +1,197 @@
+{
+  "name": "PhishGuard XGBoost",
+  "version": "1.2",
+  "algorithm": "XGBoost",
+  "description": "Model deteksi URL phishing berbasis fitur leksikal URL (tanpa akses jaringan).",
+  "dataset": {
+    "name": "Web page phishing detection (Hannousse & Yahiouche), dataset B",
+    "source_file": "hannousse_2021.csv",
+    "source_sha256": "21093e2902e5441c86a6daf95e86e7c332046e477fdf109a579d7bd81e586d6c",
+    "train_rows": 9172,
+    "test_rows": 2255
+  },
+  "feature_count": 49,
+  "features": [
+    "length_url",
+    "length_hostname",
+    "ip",
+    "nb_dots",
+    "nb_hyphens",
+    "nb_at",
+    "nb_qm",
+    "nb_and",
+    "nb_or",
+    "nb_eq",
+    "nb_underscore",
+    "nb_tilde",
+    "nb_percent",
+    "nb_slash",
+    "nb_star",
+    "nb_colon",
+    "nb_comma",
+    "nb_semicolon",
+    "nb_dollar",
+    "nb_space",
+    "nb_www",
+    "nb_com",
+    "nb_http",
+    "nb_dslash",
+    "is_https",
+    "ratio_digits_url",
+    "ratio_digits_host",
+    "punycode",
+    "has_port",
+    "tld_in_path",
+    "tld_in_subdomain",
+    "abnormal_subdomain",
+    "nb_subdomains",
+    "prefix_suffix",
+    "shortening_service",
+    "path_extension",
+    "length_words_raw",
+    "char_repeat",
+    "shortest_words_raw",
+    "shortest_word_host",
+    "shortest_word_path",
+    "longest_words_raw",
+    "longest_word_host",
+    "longest_word_path",
+    "avg_words_raw",
+    "avg_word_host",
+    "avg_word_path",
+    "phish_hints",
+    "entropy_host"
+  ],
+  "extractor": {
+    "version": "1.2",
+    "sha256": "4f9dc03837092dbac78969ab6331ee5fc2bc3ae0df76475a1adf319ce73e95ab"
+  },
+  "split": {
+    "method": "StratifiedGroupKFold, grup = domain terdaftar (PSL termasuk domain privat)",
+    "random_state": 43,
+    "fold": 1
+  },
+  "metrics": {
+    "accuracy": 0.87576,
+    "precision": 0.87513,
+    "recall": 0.873434,
+    "f1_score": 0.8741,
+    "roc_auc": 0.950254,
+    "brier_score": 0.088533
+  },
+  "metrics_std": {
+    "accuracy": 0.015716,
+    "precision": 0.027182,
+    "recall": 0.023008,
+    "f1_score": 0.021704,
+    "roc_auc": 0.01055,
+    "brier_score": 0.010208
+  },
+  "metrics_source": "estimasi generalisasi: 5 pengacakan x 5 lipatan StratifiedGroupKFold (grup = domain terdaftar) pada seluruh data, 25 evaluasi, threshold 0.5, kelas positif = phishing",
+  "holdout_test": {
+    "source": "held-out test set (n=2255), threshold 0.5, kelas positif = phishing",
+    "metrics": {
+      "accuracy": 0.880266,
+      "precision": 0.89292,
+      "recall": 0.87133,
+      "f1_score": 0.881993,
+      "roc_auc": 0.95599,
+      "brier_score": 0.085182
+    },
+    "ci95_domain_bootstrap": {
+      "accuracy": [
+        0.859013,
+        0.900849
+      ],
+      "precision": [
+        0.856397,
+        0.922887
+      ],
+      "recall": [
+        0.83025,
+        0.904494
+      ],
+      "f1": [
+        0.848768,
+        0.907638
+      ],
+      "roc_auc": [
+        0.943159,
+        0.967201
+      ]
+    },
+    "phishing_share": 0.5135,
+    "largest_domain": "sharepoint.com",
+    "largest_domain_share": 0.0328,
+    "metrics_without_largest_domain": {
+      "accuracy": 0.876204,
+      "precision": 0.885417,
+      "recall": 0.862546,
+      "f1_score": 0.873832,
+      "roc_auc": 0.953059
+    }
+  },
+  "cross_validation": {
+    "method": "StratifiedGroupKFold(n_splits=5, shuffle=True, random_state=42), grup = domain terdaftar",
+    "mean": {
+      "accuracy": 0.867399,
+      "precision": 0.86685,
+      "recall": 0.865363,
+      "f1": 0.865695,
+      "roc_auc": 0.944684
+    },
+    "std": {
+      "accuracy": 0.016754,
+      "precision": 0.01899,
+      "recall": 0.032959,
+      "f1": 0.016947,
+      "roc_auc": 0.010121
+    }
+  },
+  "confusion_matrix": {
+    "labels": [
+      "legitimate",
+      "phishing"
+    ],
+    "matrix": [
+      [
+        976,
+        121
+      ],
+      [
+        149,
+        1009
+      ]
+    ]
+  },
+  "confusion_matrix_source": "held-out test set",
+  "label_mapping": {
+    "0": "Legitimate",
+    "1": "Phishing"
+  },
+  "positive_class": 1,
+  "training": {
+    "random_state": 42,
+    "hyperparameters": {
+      "n_estimators": 300,
+      "learning_rate": 0.1,
+      "max_depth": 6,
+      "subsample": 1.0
+    },
+    "selection_metric": "f1",
+    "selection": "otomatis (rata-rata CV tertinggi)",
+    "environment": "Google Colab"
+  },
+  "libraries": {
+    "numpy": "2.1.3",
+    "pandas": "2.2.3",
+    "scikit-learn": "1.6.1",
+    "xgboost": "3.4.1",
+    "joblib": "1.6.0",
+    "tldextract": "5.4.0",
+    "python": "3.13.16"
+  },
+  "trained_at": "2026-10-08T15:19:12+00:00",
+  "model_file": "model.pkl",
+  "model_sha256": "bc535d3012468f54298d7d08fcb3708538e442c7d586d976476f66255985ba6b"
+}
