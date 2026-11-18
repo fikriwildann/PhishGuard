@@ -88,6 +88,11 @@ class ModelManagementController extends Controller
             return back()->withInput()->with('error', "Bundle model dengan nama '{$bundleName}' sudah ada. Silakan gunakan versi yang berbeda.");
         }
 
+        // Validasi ketersediaan ekstensi PHP ZipArchive
+        if (! class_exists('ZipArchive')) {
+            return back()->withInput()->with('error', 'Ekstensi PHP "zip" belum aktif di server Anda. Harap aktifkan "extension=zip" di file php.ini dan restart server.');
+        }
+
         // Ekstrak ZIP bundle dengan proteksi Path Traversal (Zip Slip)
         $zip = new ZipArchive();
         if ($zip->open($file->getRealPath()) === true) {
@@ -122,6 +127,17 @@ class ModelManagementController extends Controller
 
         $fileHash = hash_file('sha256', $modelPkl);
 
+        // Ekstraksi metrik secara fleksibel dari berbagai format metadata.json
+        $balanced = $meta['final_test_set_metrics_before_refit']['balanced_mode'] ?? [];
+        $finalMetrics = $meta['final_test_set_metrics_before_refit'] ?? [];
+        $rawMetrics = $meta['metrics'] ?? [];
+
+        $accuracy = (float) ($rawMetrics['accuracy'] ?? $balanced['accuracy'] ?? $finalMetrics['accuracy'] ?? 0.85);
+        $precision = (float) ($rawMetrics['precision'] ?? $balanced['precision'] ?? $finalMetrics['precision'] ?? 0.85);
+        $recall = (float) ($rawMetrics['recall'] ?? $balanced['recall'] ?? $finalMetrics['recall'] ?? 0.85);
+        $f1Score = (float) ($rawMetrics['f1_score'] ?? $balanced['f1_score'] ?? $finalMetrics['f1_score'] ?? 0.85);
+        $rocAuc = (float) ($rawMetrics['roc_auc'] ?? $finalMetrics['roc_auc'] ?? $balanced['roc_auc'] ?? 0.90);
+
         // Simpan ke database dengan status INACTIVE
         $newModel = MlModel::create([
             'name' => $request->name,
@@ -133,12 +149,12 @@ class ModelManagementController extends Controller
             'dataset_name' => $meta['dataset']['name'] ?? 'Hannousse & Yahiouche Dataset B',
             'feature_count' => count($features),
             'feature_names' => $features,
-            'accuracy' => (float) ($meta['metrics']['accuracy'] ?? 0.85),
-            'precision' => (float) ($meta['metrics']['precision'] ?? 0.85),
-            'recall' => (float) ($meta['metrics']['recall'] ?? 0.85),
-            'f1_score' => (float) ($meta['metrics']['f1_score'] ?? 0.85),
-            'roc_auc' => (float) ($meta['metrics']['roc_auc'] ?? 0.90),
-            'description' => $request->description ?? ($meta['description'] ?? null),
+            'accuracy' => $accuracy,
+            'precision' => $precision,
+            'recall' => $recall,
+            'f1_score' => $f1Score,
+            'roc_auc' => $rocAuc,
+            'description' => $request->description ?? ($meta['description'] ?? ($meta['reason_for_selection'] ?? null)),
             'status' => MlModel::STATUS_INACTIVE,
             'uploaded_by' => Auth::id(),
         ]);
@@ -171,7 +187,7 @@ class ModelManagementController extends Controller
         $model = MlModel::findOrFail($id);
         $res = $this->service->validateModel($model->bundle_name, $model->id);
 
-        if ($res['ok'] ?? false) {
+        if (($res['ok'] ?? false) || ($res['valid'] ?? false)) {
             return back()->with('validation_success', 'Model lolos seluruh 10 uji validasi dan kompatibel penuh dengan feature extractor.');
         }
 
@@ -279,5 +295,39 @@ class ModelManagementController extends Controller
     {
         $logs = ModelActivationLog::with('admin', 'previousModel', 'newModel')->latest()->paginate(15);
         return view('admin.models.history', compact('logs'));
+    }
+
+    /**
+     * Hapus model machine learning (hanya jika tidak sedang aktif).
+     */
+    public function destroy(int $id): RedirectResponse
+    {
+        $model = MlModel::findOrFail($id);
+
+        // Proteksi: Model yang sedang aktif tidak boleh dihapus
+        if ($model->isActive()) {
+            return back()->with('error', 'Model yang sedang aktif di produksi tidak dapat dihapus! Silakan aktifkan model lain terlebih dahulu sebelum menghapus model ini.');
+        }
+
+        $modelName = $model->name;
+        $modelVersion = $model->version;
+        $bundleName = $model->bundle_name;
+
+        // Hapus berkas fisik bundle model di ml/models jika ada
+        $bundleDir = base_path('../ml/models/' . $bundleName);
+        if (File::exists($bundleDir)) {
+            File::deleteDirectory($bundleDir);
+        }
+
+        // Hapus dari basis data
+        $model->delete();
+
+        ActivityLog::record(
+            ActivityLog::DELETE_MODEL,
+            "Admin menghapus model: {$modelName} v{$modelVersion} (Bundle: {$bundleName})"
+        );
+
+        return redirect()->route('admin.models.index')
+            ->with('success', "Model {$modelName} v{$modelVersion} berhasil dihapus beserta berkas fisiknya.");
     }
 }

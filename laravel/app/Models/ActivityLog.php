@@ -23,6 +23,7 @@ class ActivityLog extends Model
     public const ACTIVATE_MODEL = 'ACTIVATE_MODEL';
     public const ROLLBACK_MODEL = 'ROLLBACK_MODEL';
     public const ARCHIVE_MODEL = 'ARCHIVE_MODEL';
+    public const DELETE_MODEL = 'DELETE_MODEL';
     public const UPDATE_PROFILE = 'UPDATE_PROFILE';
     public const CHANGE_PASSWORD = 'CHANGE_PASSWORD';
     public const DELETE_SCAN = 'DELETE_SCAN';

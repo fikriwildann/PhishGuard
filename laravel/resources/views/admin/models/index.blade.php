@@ -122,6 +122,18 @@
                                    class="inline-block px-3 py-1 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 text-xs font-medium transition-colors">
                                     Kelola & Validasi
                                 </a>
+                                @if(! $m->isActive())
+                                    <form action="{{ route('admin.models.destroy', $m->id) }}" method="POST" class="inline"
+                                          onsubmit="return confirm('Apakah Anda yakin ingin menghapus model {{ $m->name }} v{{ $m->version }}? Berkas bundle fisik di server akan ikut terhapus dan tindakan ini tidak dapat dibatalkan.')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit"
+                                                class="inline-block px-2.5 py-1 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 text-xs font-medium transition-colors"
+                                                title="Hapus Model">
+                                            Hapus
+                                        </button>
+                                    </form>
+                                @endif
                             </td>
                         </tr>
                     @empty

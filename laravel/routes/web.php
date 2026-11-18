@@ -87,6 +87,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/models/{id}/validate', [AdminModelController::class, 'validateBundle'])->name('models.validate');
     Route::post('/models/{id}/activate', [AdminModelController::class, 'activate'])->name('models.activate');
     Route::post('/models/{id}/rollback', [AdminModelController::class, 'rollback'])->name('models.rollback');
+    Route::delete('/models/{id}', [AdminModelController::class, 'destroy'])->name('models.destroy');
 
     // Audit Trail Activity Logs (Phase 32)
     Route::get('/activity-logs', [AdminActivityLogController::class, 'index'])->name('activity-logs.index');

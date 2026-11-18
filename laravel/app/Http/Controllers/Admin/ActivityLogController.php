@@ -47,6 +47,7 @@ class ActivityLogController extends Controller
             ActivityLog::UPLOAD_MODEL => 'Upload Model',
             ActivityLog::ACTIVATE_MODEL => 'Activate Model',
             ActivityLog::ROLLBACK_MODEL => 'Rollback Model',
+            ActivityLog::DELETE_MODEL => 'Delete Model',
             ActivityLog::DELETE_SCAN => 'Delete Scan',
             ActivityLog::UPDATE_PROFILE => 'Update User/Profile',
             ActivityLog::CHANGE_PASSWORD => 'Change Password',

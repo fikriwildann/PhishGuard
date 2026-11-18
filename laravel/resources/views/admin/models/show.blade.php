@@ -158,6 +158,23 @@
                     </button>
                 </form>
             @endif
+
+            <!-- 4. Hapus Model (Hanya jika tidak aktif) -->
+            @if(! $model->isActive())
+                <div class="rounded-xl bg-rose-950/20 p-4 border border-rose-500/30 space-y-2">
+                    <p class="text-xs font-semibold text-rose-300">Zona Bahaya: Hapus Model</p>
+                    <p class="text-[11px] text-slate-400">Menghapus model dari basis data beserta folder berkas fisiknya di server.</p>
+                    <form action="{{ route('admin.models.destroy', $model->id) }}" method="POST"
+                          onsubmit="return confirm('Apakah Anda yakin ingin menghapus model {{ $model->name }} v{{ $model->version }} secara permanen? Berkas model akan dihapus dari server dan tidak dapat dipulihkan.')">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit"
+                                class="w-full mt-1 py-2 px-3 rounded-lg border border-rose-500/40 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 text-xs font-semibold transition-colors">
+                            Hapus Model Ini
+                        </button>
+                    </form>
+                </div>
+            @endif
         </div>
     </div>
 </div>
