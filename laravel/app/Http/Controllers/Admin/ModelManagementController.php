@@ -242,6 +242,8 @@ class ModelManagementController extends Controller
             "Admin mengaktifkan model {$model->name} v{$model->version} menggantikan " . ($currentActive ? "{$currentActive->name} v{$currentActive->version}" : 'tidak ada')
         );
 
+        $this->syncMlEnvActiveBundle($model->bundle_name, $model->id);
+
         return redirect()->route('admin.models.active')->with('success', "Model {$model->name} v{$model->version} berhasil diaktifkan sebagai model produksi!");
     }
 
@@ -284,6 +286,8 @@ class ModelManagementController extends Controller
             ActivityLog::ROLLBACK_MODEL,
             "Admin melakukan rollback model ke {$targetModel->name} v{$targetModel->version}"
         );
+
+        $this->syncMlEnvActiveBundle($targetModel->bundle_name, $targetModel->id);
 
         return redirect()->route('admin.models.active')->with('success', "Rollback berhasil! Model {$targetModel->name} v{$targetModel->version} kini aktif kembali.");
     }
@@ -329,5 +333,19 @@ class ModelManagementController extends Controller
 
         return redirect()->route('admin.models.index')
             ->with('success', "Model {$modelName} v{$modelVersion} berhasil dihapus beserta berkas fisiknya.");
+    }
+
+    /**
+     * Sinkronisasi berkas ml/.env agar fallback model saat boot sesuai dengan model aktif terakhir.
+     */
+    private function syncMlEnvActiveBundle(string $bundleName, int $modelId): void
+    {
+        $envPath = base_path('../ml/.env');
+        if (File::exists($envPath)) {
+            $content = File::get($envPath);
+            $content = preg_replace('/^ACTIVE_MODEL_DIR=.*$/m', "ACTIVE_MODEL_DIR={$bundleName}", $content);
+            $content = preg_replace('/^ACTIVE_MODEL_ID=.*$/m', "ACTIVE_MODEL_ID={$modelId}", $content);
+            File::put($envPath, $content);
+        }
     }
 }

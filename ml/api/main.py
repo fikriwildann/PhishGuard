@@ -145,7 +145,7 @@ def create_app(
         elif status == "menunggu":
             logger.warning("Belum ada model aktif; /predict menjawab 503 sampai model aktif tersedia.")
         retry_task = None
-        if status == "menunggu" and config.laravel_url and not config.problem:
+        if status in ("menunggu", "bootstrap") and config.laravel_url and not config.problem:
             retry_task = asyncio.create_task(retry_until_model(app))
         try:
             yield

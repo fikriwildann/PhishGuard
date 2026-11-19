@@ -225,15 +225,29 @@ def sync_active_model(app) -> str:
 
 
 async def retry_until_model(app) -> None:
-    """Ulangi penarikan model aktif sampai ada model atau terjadi kegagalan validasi."""
+    """Ulangi penarikan model aktif dari Laravel jika saat startup Laravel belum siap."""
     interval = app.state.internal.retry_seconds
     attempt = 0
+    config: InternalConfig = app.state.internal
+    manager: ModelManager = app.state.manager
     while True:
         await asyncio.sleep(interval)
         attempt += 1
-        status = await asyncio.to_thread(sync_active_model, app)
-        if status != "menunggu":
-            logger.info("Model aktif diperoleh setelah percobaan ke-%d (%s).", attempt, status)
+        if not config.laravel_url or config.problem:
             return
-        if attempt % 20 == 0:
-            logger.warning("Masih menunggu model aktif (percobaan ke-%d).", attempt)
+        try:
+            info = await asyncio.to_thread(fetch_active_model, config.laravel_url, config.token)
+            if info and info.get("bundle_name"):
+                current_bundle = manager.current.bundle_name if manager.current else None
+                if current_bundle != info["bundle_name"]:
+                    with model_operation(app):
+                        report = manager.activate_bundle(info["bundle_name"], info.get("model_id"))
+                        if report.ok:
+                            logger.info("Sinkronisasi model aktif dari Laravel berhasil: '%s'.", info["bundle_name"])
+                            return
+                        logger.error("Gagal aktivasi model dari Laravel: %s", report.errors)
+                else:
+                    return
+        except LaravelUnavailable:
+            if attempt % 20 == 0:
+                logger.warning("Masih menunggu Laravel siap untuk sinkronisasi model aktif (percobaan ke-%d).", attempt)

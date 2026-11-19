@@ -59,12 +59,31 @@ class PhishGuardService
             return $down;
         }
 
-        return [
+        $health = [
             'reachable' => true,
             'model_loaded' => $data['model_loaded'],
             'model_name' => is_string($data['model_name'] ?? null) ? $data['model_name'] : null,
             'model_version' => is_string($data['model_version'] ?? null) ? $data['model_version'] : null,
         ];
+
+        // Sinkronisasi otomatis: jika model di FastAPI berbeda dari model aktif di database, minta FastAPI memuat model aktif DB
+        if ($health['reachable'] && class_exists(\App\Models\MlModel::class)) {
+            try {
+                $activeModel = \App\Models\MlModel::getActiveModel();
+                if ($activeModel && ($health['model_name'] !== $activeModel->name || $health['model_version'] !== $activeModel->version)) {
+                    $reload = $this->reloadModel($activeModel->bundle_name, $activeModel->id);
+                    if ($reload['ok'] ?? false) {
+                        $health['model_name'] = $activeModel->name;
+                        $health['model_version'] = $activeModel->version;
+                        $health['model_loaded'] = true;
+                    }
+                }
+            } catch (\Throwable $e) {
+                // Abaikan kesalahan DB agar tidak memutus pengecekan health
+            }
+        }
+
+        return $health;
     }
 
     /**
